@@ -7,12 +7,19 @@ import {
   doc, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+const emailEl = document.getElementById("email");
+const passEl = document.getElementById("password");
+const msg = document.getElementById("msg");
+
+document.getElementById("loginBtn").addEventListener("click", login);
+document.getElementById("registerBtn").addEventListener("click", register);
+
 /* ВХОД */
-window.login = async () => {
+async function login() {
   msg.innerText = "";
 
-  const e = email.value.trim();
-  const p = password.value;
+  const e = emailEl.value.trim();
+  const p = passEl.value;
 
   if (!e || !p) {
     msg.innerText = "Введите email и пароль";
@@ -26,14 +33,14 @@ window.login = async () => {
     msg.innerText = "Ошибка входа";
     console.error(err);
   }
-};
+}
 
 /* РЕГИСТРАЦИЯ */
-window.register = async () => {
+async function register() {
   msg.innerText = "";
 
-  const e = email.value.trim();
-  const p = password.value;
+  const e = emailEl.value.trim();
+  const p = passEl.value;
 
   if (!e || p.length < 6) {
     msg.innerText = "Пароль минимум 6 символов";
@@ -56,7 +63,7 @@ window.register = async () => {
     msg.innerText = "Ошибка регистрации";
     console.error(err);
   }
-};
+}
 
 /* РЕДИРЕКТ */
 async function route(uid) {
