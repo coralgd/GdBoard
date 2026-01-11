@@ -59,9 +59,11 @@ async function register() {
     });
 
     location.href = "nick.html";
-  } catch (err) {
-    msg.innerText = "Ошибка регистрации";
-    console.error(err);
+catch (err) {
+  console.error(err);
+  msg.innerText = err.code + " : " + err.message;
+}
+
   }
 }
 
@@ -76,3 +78,4 @@ async function route(uid) {
     location.href = "nick.html";
   }
 }
+
