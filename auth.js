@@ -7,51 +7,65 @@ import {
   doc, getDoc, setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+/* DOM */
 const emailEl = document.getElementById("email");
 const passEl = document.getElementById("password");
-const msg = document.getElementById("msg");
+const msgEl = document.getElementById("msg");
+const loginBtn = document.getElementById("loginBtn");
+const registerBtn = document.getElementById("registerBtn");
 
-document.getElementById("loginBtn").addEventListener("click", login);
-document.getElementById("registerBtn").addEventListener("click", register);
+/* защита если скрипт загрузился раньше DOM */
+if (!emailEl || !passEl || !loginBtn || !registerBtn || !msgEl) {
+  console.error("Auth DOM not ready");
+}
 
-/* ВХОД */
+/* события */
+loginBtn.addEventListener("click", login);
+registerBtn.addEventListener("click", register);
+
+/* ================= ВХОД ================= */
 async function login() {
-  msg.innerText = "";
+  msgEl.textContent = "";
 
-  const e = emailEl.value.trim();
-  const p = passEl.value;
+  const email = emailEl.value.trim();
+  const password = passEl.value;
 
-  if (!e || !p) {
-    msg.innerText = "Введите email и пароль";
+  if (!email || !password) {
+    msgEl.textContent = "Введите email и пароль";
     return;
   }
 
   try {
-    const cred = await signInWithEmailAndPassword(auth, e, p);
-    await route(cred.user.uid);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await routeAfterAuth(cred.user.uid);
   } catch (err) {
-    msg.innerText = "Ошибка входа";
     console.error(err);
+    msgEl.textContent = mapError(err);
   }
 }
 
-/* РЕГИСТРАЦИЯ */
+/* ================= РЕГИСТРАЦИЯ ================= */
 async function register() {
-  msg.innerText = "";
+  msgEl.textContent = "";
 
-  const e = emailEl.value.trim();
-  const p = passEl.value;
+  const email = emailEl.value.trim();
+  const password = passEl.value;
 
-  if (!e || p.length < 6) {
-    msg.innerText = "Пароль минимум 6 символов";
+  if (!email) {
+    msgEl.textContent = "Введите email";
+    return;
+  }
+
+  if (password.length < 6) {
+    msgEl.textContent = "Пароль минимум 6 символов";
     return;
   }
 
   try {
-    const cred = await createUserWithEmailAndPassword(auth, e, p);
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
 
     await setDoc(doc(db, "users", cred.user.uid), {
-      email: e,
+      email: email,
       nick: "",
       situation: "not",
       role: "player",
@@ -59,23 +73,47 @@ async function register() {
     });
 
     location.href = "nick.html";
-catch (err) {
-  console.error(err);
-  msg.innerText = err.code + " : " + err.message;
-}
-
+  } catch (err) {
+    console.error(err);
+    msgEl.textContent = mapError(err);
   }
 }
 
-/* РЕДИРЕКТ */
-async function route(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  const d = snap.data();
+/* ================= РЕДИРЕКТ ================= */
+async function routeAfterAuth(uid) {
+  try {
+    const snap = await getDoc(doc(db, "users", uid));
+    const data = snap.data();
 
-  if (d.situation === "verified") {
-    location.href = "main.html";
-  } else {
-    location.href = "nick.html";
+    if (!data || data.situation !== "verified") {
+      location.href = "nick.html";
+    } else {
+      location.href = "main.html";
+    }
+  } catch (err) {
+    console.error(err);
+    msgEl.textContent = "Ошибка чтения профиля";
   }
 }
 
+/* ================= ТЕКСТЫ ОШИБОК ================= */
+function mapError(err) {
+  switch (err.code) {
+    case "auth/email-already-in-use":
+      return "Этот email уже зарегистрирован";
+    case "auth/invalid-email":
+      return "Некорректный email";
+    case "auth/weak-password":
+      return "Слишком слабый пароль";
+    case "auth/user-not-found":
+      return "Аккаунт не найден";
+    case "auth/wrong-password":
+      return "Неверный пароль";
+    case "auth/operation-not-allowed":
+      return "Email/Password отключён в Firebase";
+    case "auth/network-request-failed":
+      return "Ошибка сети";
+    default:
+      return err.message || "Неизвестная ошибка";
+  }
+}
