@@ -1,33 +1,34 @@
-<!DOCTYPE html>
-<html>
-<body>
-
-<h2>Nickname</h2>
-<input id="nick">
-<button id="send" onclick="save()">Save</button>
-<div id="state"></div>
-
 <script type="module">
 import { auth, db } from "./firebase.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-const u = auth.currentUser;
-const s = await getDoc(doc(db,"users",u.uid));
-const d = s.data();
+onAuthStateChanged(auth, async (u)=>{
+  if(!u){
+    location.href="index.html";
+    return;
+  }
 
-state.innerText = "Situation: "+d.situation;
+  const s = await getDoc(doc(db,"users",u.uid));
+  const d = s.data();
 
-if(d.situation==="verified") location.href="main.html";
-if(d.nick) send.style.display="none";
+  state.innerText = "Situation: " + d.situation;
 
-window.save = async ()=>{
- await updateDoc(doc(db,"users",u.uid),{
-  nick:nick.value,
-  situation:"requested"
- });
- send.style.display="none";
-};
+  if(d.situation==="verified"){
+    location.href="main.html";
+    return;
+  }
+
+  if(d.nick){
+    send.style.display="none";
+  }
+
+  window.save = async ()=>{
+    await updateDoc(doc(db,"users",u.uid),{
+      nick: nick.value,
+      situation: "requested"
+    });
+    send.style.display="none";
+  };
+});
 </script>
-
-</body>
-</html>
