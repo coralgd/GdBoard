@@ -4,7 +4,9 @@ import {
   createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import {
-  doc, getDoc, setDoc
+  doc,
+  getDoc,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* DOM */
@@ -14,16 +16,11 @@ const msgEl = document.getElementById("msg");
 const loginBtn = document.getElementById("loginBtn");
 const registerBtn = document.getElementById("registerBtn");
 
-/* защита если скрипт загрузился раньше DOM */
-if (!emailEl || !passEl || !loginBtn || !registerBtn || !msgEl) {
-  console.error("Auth DOM not ready");
-}
-
 /* события */
 loginBtn.addEventListener("click", login);
 registerBtn.addEventListener("click", register);
 
-/* ================= ВХОД ================= */
+/* ========== ВХОД ========== */
 async function login() {
   msgEl.textContent = "";
 
@@ -44,7 +41,7 @@ async function login() {
   }
 }
 
-/* ================= РЕГИСТРАЦИЯ ================= */
+/* ========== РЕГИСТРАЦИЯ ========== */
 async function register() {
   msgEl.textContent = "";
 
@@ -79,7 +76,7 @@ async function register() {
   }
 }
 
-/* ================= РЕДИРЕКТ ================= */
+/* ========== РЕДИРЕКТ ========== */
 async function routeAfterAuth(uid) {
   try {
     const snap = await getDoc(doc(db, "users", uid));
@@ -96,15 +93,17 @@ async function routeAfterAuth(uid) {
   }
 }
 
-/* ================= ТЕКСТЫ ОШИБОК ================= */
+/* ========== ТЕКСТЫ ОШИБОК ========== */
 function mapError(err) {
+  if (!err || !err.code) return "Неизвестная ошибка";
+
   switch (err.code) {
     case "auth/email-already-in-use":
       return "Этот email уже зарегистрирован";
     case "auth/invalid-email":
       return "Некорректный email";
     case "auth/weak-password":
-      return "Слишком слабый пароль";
+      return "Слабый пароль";
     case "auth/user-not-found":
       return "Аккаунт не найден";
     case "auth/wrong-password":
@@ -114,6 +113,6 @@ function mapError(err) {
     case "auth/network-request-failed":
       return "Ошибка сети";
     default:
-      return err.message || "Неизвестная ошибка";
+      return err.message;
   }
 }
