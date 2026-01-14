@@ -30,12 +30,11 @@
 
       const usersRef = collection(db, "users");
 
-      // ⚡ Запрос только verified, сортировка по points
+      // ⚡ Запрос только verified пользователей, сортировка по points DESC
       const q = query(
         usersRef,
         where("situation", "==", "verified"),
-        orderBy("points", "desc"),
-        orderBy("__name__") // нужен второй orderBy для Firestore
+        orderBy("points", "desc") // сортировка по убыванию очков
       );
 
       const querySnapshot = await getDocs(q);
