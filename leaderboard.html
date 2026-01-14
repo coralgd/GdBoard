@@ -1,99 +1,79 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Лидерборд</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { 
-      getFirestore, 
-      collection, 
-      query, 
-      where, 
-      getDocs, 
-      getDoc, 
-      doc,
-      orderBy
-    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+<meta charset="UTF-8">
+<title>Лидерборд</title>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs, getDoc, doc, orderBy } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
-      authDomain: "gdboard-add4a.firebaseapp.com",
-      projectId: "gdboard-add4a",
-      storageBucket: "gdboard-add4a.firebasestorage.app",
-      messagingSenderId: "883125028740",
-      appId: "1:883125028740:web:c504de4139943b8606bfd1"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
+  authDomain: "gdboard-add4a.firebaseapp.com",
+  projectId: "gdboard-add4a",
+  storageBucket: "gdboard-add4a.firebasestorage.app",
+  messagingSenderId: "883125028740",
+  appId: "1:883125028740:web:c504de4139943b8606bfd1"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    const leaderboardList = document.getElementById("leaderboardList");
+const leaderboardList = document.getElementById("leaderboardList");
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return window.location.href = "index.html";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href = "index.html";
 
-      const userDocSnap = await getDoc(doc(db, "users", user.uid));
-      if (!userDocSnap.exists()) return window.location.href = "index.html";
+  const userDocSnap = await getDoc(doc(db, "users", user.uid));
+  if (!userDocSnap.exists()) return window.location.href = "index.html";
 
-      const data = userDocSnap.data();
-      const role = data.role || "player";
-      const situation = data.situation || "not requested";
+  const data = userDocSnap.data();
+  const role = data.role || "player";
+  const situation = data.situation || "not requested";
 
-      if (role === "player" && situation !== "verified") {
-        return window.location.href = "nick.html";
-      }
+  if (role === "player" && situation !== "verified") return window.location.href = "nick.html";
 
-      // Получаем всех verified пользователей, сортировка по убыванию баллов
-      const usersRef = collection(db, "users");
-      const q = query(
-        usersRef,
-        where("situation", "==", "verified"),
-        orderBy("points", "desc")
-      );
-      const snapshot = await getDocs(q);
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("situation", "==", "verified"), orderBy("points", "desc"));
+  const snapshot = await getDocs(q);
 
-      leaderboardList.innerHTML = "";
+  leaderboardList.innerHTML = "";
 
-      // Массив пользователей
-      const usersArray = snapshot.docs.map(docItem => ({ id: docItem.id, ...docItem.data() }));
+  const usersArray = snapshot.docs.map(docItem => ({ id: docItem.id, ...docItem.data() }));
 
-      let rank = 0;          // текущее место
-      let prevPoints = null; // предыдущие баллы
-      let sameCount = 0;     // количество игроков с одинаковыми баллами
+  let prevPoints = null;
+  let prevRank = 0;
 
-      usersArray.forEach((userData, idx) => {
-        const li = document.createElement("li");
-        const points = userData.points || 0;
+  usersArray.forEach((userData, index) => {
+    const li = document.createElement("li");
+    const points = userData.points || 0;
 
-        // Спортивная система рангов
-        if (prevPoints === points) {
-          // игрок с такими же баллами, место не меняется
-          sameCount++;
-        } else {
-          rank += sameCount + 1; // новое место = предыдущее место + количество одинаковых выше
-          sameCount = 0;
-          prevPoints = points;
-        }
+    // Вычисляем место “спортивным” способом
+    let rank;
+    if (points === prevPoints) {
+      rank = prevRank;
+    } else {
+      rank = index + 1;
+      prevPoints = points;
+      prevRank = rank;
+    }
 
-        // Формируем строку: Ник — Баллы — Роль
-        let line = `${userData.nick || "Не указан"} — ${points}`;
-        if (userData.role === "moderator") line += " Модер";
-        if (userData.role === "elder") line += " Старший модер";
+    let line = `${userData.nick || "Не указан"} — ${points}`;
+    if (userData.role === "moderator") line += " Модер";
+    if (userData.role === "elder") line += " Старший модер";
 
-        // Текущий игрок синим
-        if (userData.id === user.uid) li.style.color = "blue";
+    if (userData.id === user.uid) li.style.color = "blue";
 
-        li.textContent = `${rank}. ${line}`;
-        leaderboardList.appendChild(li);
-      });
-    });
-  </script>
+    li.textContent = `${rank}. ${line}`;
+    leaderboardList.appendChild(li);
+  });
+});
+</script>
 </head>
 <body>
-  <h1>Лидерборд</h1>
-  <ol id="leaderboardList" style="list-style: none; padding-left: 0;"></ol>
+<h1>Лидерборд</h1>
+<ol id="leaderboardList" style="list-style: none; padding-left: 0;"></ol>
 </body>
 </html>
