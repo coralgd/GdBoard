@@ -8,7 +8,6 @@
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
     import { getFirestore, doc, getDoc, setDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    // Firebase конфиг
     const firebaseConfig = {
       apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
       authDomain: "gdboard-add4a.firebaseapp.com",
@@ -31,10 +30,9 @@
     let currentUser = null;
     let userDocRef = null;
 
-    // Проверка текущего пользователя
     onAuthStateChanged(auth, async (user) => {
       if (!user) {
-        window.location.href = "index.html"; // если не вошёл
+        window.location.href = "index.html";
         return;
       }
 
@@ -43,14 +41,13 @@
 
       userDocRef = doc(db, "users", currentUser.uid);
 
-      // Проверяем существующий документ
       const userDocSnap = await getDoc(userDocRef);
       if (!userDocSnap.exists()) {
-        // Создаём документ при регистрации, если его нет
         await setDoc(userDocRef, {
           uid: currentUser.uid,
           email: currentUser.email,
-          situation: "not requested"
+          situation: "not requested",
+          points: 0
         });
       }
 
@@ -59,37 +56,28 @@
         if (!docSnap.exists()) return;
         const data = docSnap.data();
 
-        // Обновляем статус на странице
         situationElem.textContent = data.situation || "not requested";
 
-        // Блокируем поле и кнопку, если ник уже отправлен
         if (data.situation === "requested" || data.situation === "verified") {
           nickInput.disabled = true;
           submitNickBtn.disabled = true;
         }
 
-        // Автоматический редирект на main.html при verified
         if (data.situation === "verified") {
           window.location.href = "main.html";
         }
       });
     });
 
-    // Отправка ника
     submitNickBtn.addEventListener("click", async () => {
       const nickValue = nickInput.value.trim();
-      if (!nickValue) {
-        alert("Введите ник!");
-        return;
-      }
+      if (!nickValue) return alert("Введите ник!");
 
       const userDocSnap = await getDoc(userDocRef);
       if (userDocSnap.exists() && userDocSnap.data().situation === "requested") {
-        alert("Вы уже отправили ник!");
-        return;
+        return alert("Вы уже отправили ник!");
       }
 
-      // Обновляем документ пользователя
       await updateDoc(userDocRef, {
         nick: nickValue,
         situation: "requested"
@@ -98,7 +86,6 @@
       alert("Ник успешно отправлен!");
     });
 
-    // Выход из аккаунта
     logoutBtn.addEventListener("click", async () => {
       await signOut(auth);
       window.location.href = "index.html";
