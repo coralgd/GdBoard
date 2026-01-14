@@ -46,8 +46,7 @@
         if (role === "moderator") {
           window.location.href = "moderator.html";
         } else if (role === "elder") {
-          roleMessage.textContent = "Панель старшего модератора пока не готова";
-          roleMessage.style.color = "blue";
+          window.location.href = "elder.html"; // ⚡ теперь редирект на elder.html
         } else {
           roleMessage.textContent = "Ошибка: модерки нет";
           roleMessage.style.color = "red";
