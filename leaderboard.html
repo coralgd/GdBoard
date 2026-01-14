@@ -56,32 +56,31 @@
       const snapshot = await getDocs(q);
       leaderboardList.innerHTML = "";
 
-      let displayRank = 0;   // отображаемое место
-      let prevPoints = null;  // предыдущие баллы
-      let sameCount = 0;      // количество игроков с одинаковыми баллами
+      // Логика вычисления рангов "спортивным" способом
+      let prevPoints = null;
+      let rank = 0;
+      let skipped = 0;
 
-      snapshot.forEach((docItem, index) => {
+      snapshot.forEach((docItem) => {
         const userData = docItem.data();
         const li = document.createElement("li");
+        const points = userData.points || 0;
 
-        // Спортивная нумерация
-        if (prevPoints === userData.points) {
-          sameCount++; // игрок с теми же баллами
+        if (prevPoints === points) {
+          skipped++;
         } else {
-          displayRank += sameCount + 1; // увеличиваем на количество предыдущих с одинаковыми баллами
-          sameCount = 0;
-          prevPoints = userData.points;
+          rank += skipped + 1;
+          skipped = 0;
+          prevPoints = points;
         }
 
-        // Формируем строку: Ник — Баллы — Значок роли
-        let line = `${userData.nick || "Не указан"} — ${userData.points || 0}`;
+        let line = `${userData.nick || "Не указан"} — ${points}`;
         if (userData.role === "moderator") line += " 🛠️";
         if (userData.role === "elder") line += " ⚔️";
 
-        // Текущий игрок синим
         if (docItem.id === user.uid) li.style.color = "blue";
 
-        li.textContent = `${displayRank}. ${line}`;
+        li.textContent = `${rank}. ${line}`;
         leaderboardList.appendChild(li);
       });
     });
