@@ -29,24 +29,25 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "index.html";
 
-      // Показываем ник пользователя
       const userDocSnap = await getDoc(doc(db, "users", user.uid));
-      if (userDocSnap.exists()) {
-        nickDisplay.textContent = userDocSnap.data().nick || "Не указан";
-      } else {
-        nickDisplay.textContent = "Не найден";
+      if (!userDocSnap.exists()) return window.location.href = "index.html";
+
+      const data = userDocSnap.data();
+      const role = data.role || "player";
+      const situation = data.situation || "not requested";
+
+      // ⚡ Проверка: player должен быть verified
+      if (role === "player" && situation !== "verified") {
+        return window.location.href = "nick.html";
       }
 
+      nickDisplay.textContent = data.nick || "Не указан";
+
       checkBtn.addEventListener("click", async () => {
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        if (!docSnap.exists()) return;
-
-        const role = docSnap.data().role || "player";
-
         if (role === "moderator") {
           window.location.href = "moderator.html";
         } else if (role === "elder") {
-          window.location.href = "elder.html"; // ⚡ теперь редирект на elder.html
+          window.location.href = "elder.html";
         } else {
           roleMessage.textContent = "Ошибка: модерки нет";
           roleMessage.style.color = "red";
