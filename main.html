@@ -6,7 +6,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
@@ -26,6 +26,8 @@
     const logoutBtn = document.getElementById("logoutBtn");
     const nickDisplay = document.getElementById("nickDisplay");
     const leaderboardBtn = document.getElementById("leaderboardBtn");
+    const pointsDisplay = document.getElementById("pointsDisplay");
+    const rankDisplay = document.getElementById("rankDisplay");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "index.html";
@@ -37,14 +39,33 @@
       const role = data.role || "player";
       const situation = data.situation || "not requested";
 
-      // ⚡ Проверка: player должен быть verified
+      // Проверка верификации
       if (role === "player" && situation !== "verified") {
         return window.location.href = "nick.html";
       }
 
       nickDisplay.textContent = data.nick || "Не указан";
+      pointsDisplay.textContent = data.points || 0; // отображаем Баллы
 
-      // Кнопка «Проверить» для перехода в панели модераторов
+      // Определяем место игрока на лидерборде
+      const usersRef = collection(db, "users");
+      const q = query(
+        usersRef,
+        where("situation", "==", "verified"),
+        orderBy("points", "desc")
+      );
+      const snapshot = await getDocs(q);
+
+      let rank = 1;
+      for (const docItem of snapshot.docs) {
+        if (docItem.id === user.uid) {
+          rankDisplay.textContent = rank;
+          break;
+        }
+        rank++;
+      }
+
+      // Кнопка «Проверить»
       checkBtn.addEventListener("click", async () => {
         if (role === "moderator") {
           window.location.href = "moderator.html";
@@ -74,6 +95,8 @@
 <body>
   <h1>Главная</h1>
   <p>Ваш ник: <span id="nickDisplay"></span></p>
+  <p>Баллы: <span id="pointsDisplay"></span></p>
+  <p>Место на лидерборде: <span id="rankDisplay"></span></p>
   <button id="checkRoleBtn">Проверить</button>
   <button id="leaderboardBtn">Лидерборд</button>
   <p id="roleMessage"></p>
