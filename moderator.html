@@ -6,7 +6,16 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+    import { 
+      getFirestore, 
+      collection, 
+      query, 
+      where, 
+      getDocs, 
+      doc, 
+      updateDoc, 
+      getDoc   // ⚡ обязательно
+    } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
@@ -27,7 +36,7 @@
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "index.html";
 
-      // Проверка роли текущего пользователя
+      // Проверяем роль текущего пользователя
       const userSnap = await getDoc(doc(db, "users", user.uid));
       if (!userSnap.exists()) return window.location.href = "main.html";
 
