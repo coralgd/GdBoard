@@ -4,38 +4,40 @@
 <meta charset="UTF-8">
 <title>GD Board — Вход/Регистрация</title>
 <style>
-  /* ---------------- Фон ---------------- */
-  body {
-    margin: 0;
-    height: 100vh;
-    overflow: hidden;
-    font-family: 'Arial', sans-serif;
-    color: #fff;
-    background: #0a0a0a;
-  }
+  /* ---------- Сброс и базовые стили ---------- */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 100%; height: 100%; overflow: hidden; font-family: 'Arial', sans-serif; background: #0a0a0a; }
 
-  canvas#bgCanvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: -1;
-  }
+  canvas#bgCanvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
 
-  /* ---------------- Контейнер ---------------- */
+  /* ---------- Контейнер формы ---------- */
   .form-container {
-    position: relative;
+    position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(20,20,20,0.8);
+    background: rgba(20,20,20,0.85);
     padding: 40px 50px;
     border-radius: 20px;
     box-shadow: 0 0 40px #00f, 0 0 80px #0ff;
     display: flex;
     flex-direction: column;
     align-items: center;
-    min-width: 300px;
+    min-width: 320px;
     text-align: center;
+    animation: fadeIn 0.5s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from {opacity: 0; transform: translate(-50%, -55%);}
+    to {opacity: 1; transform: translate(-50%, -50%);}
+  }
+
+  h1 {
+    font-size: 3rem;
+    margin-bottom: 2rem;
+    color: #0ff;
+    text-shadow: 0 0 10px #00f, 0 0 20px #0ff;
   }
 
   input {
@@ -83,7 +85,6 @@
   }
 
   .hidden { display: none; }
-
 </style>
 </head>
 <body>
@@ -112,6 +113,24 @@
 </div>
 
 <script type="module">
+  // ---------- Firebase подготовка ----------
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+  import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
+    authDomain: "gdboard-add4a.firebaseapp.com",
+    projectId: "gdboard-add4a",
+    storageBucket: "gdboard-add4a.firebasestorage.app",
+    messagingSenderId: "883125028740",
+    appId: "1:883125028740:web:c504de4139943b8606bfd1"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
   const loginForm = document.getElementById("loginForm");
   const registerForm = document.getElementById("registerForm");
   const toggleBtn = document.getElementById("toggleBtn");
@@ -130,14 +149,39 @@
     showingLogin = !showingLogin;
   });
 
-  // -------------------- Фон --------------------
+  // ---------- Обработчики Firebase ----------
+  document.getElementById("registerBtn").addEventListener("click", async () => {
+    const email = document.getElementById("regEmail").value;
+    const password = document.getElementById("regPassword").value;
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const uid = userCredential.user.uid;
+      await setDoc(doc(db, "users", uid), {
+        situation: "not requested",
+        role: "player",
+        points: 0
+      });
+      window.location.href = "nick.html"; // Ник вводится на отдельной странице
+    } catch(e) { alert("Ошибка регистрации: " + e.message); }
+  });
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = "nick.html"; // После входа сразу на ник
+    } catch(e) { alert("Ошибка входа: " + e.message); }
+  });
+
+  // ---------- Динамический фон ----------
   const canvas = document.getElementById("bgCanvas");
   const ctx = canvas.getContext("2d");
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
 
   let angle = 0;
-
   function drawGrid() {
     const spacing = 50;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -159,11 +203,11 @@
       ctx.stroke();
     }
     ctx.restore();
-    angle += 0.0015; // скорость вращения
+    angle += 0.002; // скорость вращения
     requestAnimationFrame(drawGrid);
   }
-
   drawGrid();
+
 </script>
 
 </body>
