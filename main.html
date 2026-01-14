@@ -25,6 +25,7 @@
     const roleMessage = document.getElementById("roleMessage");
     const logoutBtn = document.getElementById("logoutBtn");
     const nickDisplay = document.getElementById("nickDisplay");
+    const leaderboardBtn = document.getElementById("leaderboardBtn");
 
     onAuthStateChanged(auth, async (user) => {
       if (!user) return window.location.href = "index.html";
@@ -43,6 +44,7 @@
 
       nickDisplay.textContent = data.nick || "Не указан";
 
+      // Кнопка «Проверить» для перехода в панели модераторов
       checkBtn.addEventListener("click", async () => {
         if (role === "moderator") {
           window.location.href = "moderator.html";
@@ -52,6 +54,14 @@
           roleMessage.textContent = "Ошибка: модерки нет";
           roleMessage.style.color = "red";
         }
+      });
+
+      // Кнопка «Лидерборд»
+      leaderboardBtn.addEventListener("click", async () => {
+        if (role === "player" && situation !== "verified") {
+          return window.location.href = "nick.html";
+        }
+        window.location.href = "leaderboard.html";
       });
     });
 
@@ -65,6 +75,7 @@
   <h1>Главная</h1>
   <p>Ваш ник: <span id="nickDisplay"></span></p>
   <button id="checkRoleBtn">Проверить</button>
+  <button id="leaderboardBtn">Лидерборд</button>
   <p id="roleMessage"></p>
   <button id="logoutBtn">Выйти</button>
 </body>
