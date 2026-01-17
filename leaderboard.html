@@ -2,154 +2,68 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Лидерборд HUD Ultra Final</title>
-<link rel="stylesheet" href="style.css">
+<title>Лидерборд</title>
 <style>
-body {
-  margin: 0; padding: 20px;
-  font-family: 'Orbitron', sans-serif;
-  background: #0b0c10;
-  overflow-x: hidden;
-  color: #00f0ff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
-  perspective: 1000px;
-}
-body::before, body::after {
-  content: '';
-  position: fixed; top:0; left:0; right:0; bottom:0;
-  pointer-events: none; z-index: -1;
-}
-body::before {
-  background-image:
-    linear-gradient(rgba(0,255,255,0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,255,255,0.05) 1px, transparent 1px);
-  background-size: 50px 50px;
-  animation: moveGrid 60s linear infinite;
-}
-body::after {
-  background: repeating-linear-gradient(0deg, rgba(0,255,255,0.02) 0px, rgba(0,255,255,0.02) 2px, transparent 2px, transparent 20px),
-              repeating-linear-gradient(90deg, rgba(0,255,255,0.02) 0px, rgba(0,255,255,0.02) 2px, transparent 2px, transparent 20px);
-  animation: moveGrid2 40s linear infinite;
-}
-@keyframes moveGrid { 0%{background-position:0 0,0 0;} 100%{background-position:50px 50px,50px 50px;} }
-@keyframes moveGrid2 { 0%{background-position:0 0,0 0;} 100%{background-position:40px 40px,40px 40px;} }
-h1 { font-size:2.8em; margin-bottom:25px; color:#00f0ff; text-shadow:0 0 10px #00f0ff,0 0 25px #00a0c0; }
-#leaderboard { width:95%; max-width:1000px; display:flex; flex-direction:column; gap:12px; }
-.table-header {
-  display: grid; grid-template-columns: 1fr 3fr 2fr 2fr;
-  padding:12px 15px; border-radius:10px; background: rgba(0,0,0,0.7);
-  border:1px solid rgba(0,255,255,0.4); text-align:center; font-weight:bold; text-shadow:0 0 5px #00f0ff;
-}
-.table-row {
-  display:grid; grid-template-columns: 1fr 3fr 2fr 2fr;
-  padding:14px 16px; border-radius:10px; background: rgba(0,0,0,0.55);
-  border:1px solid rgba(0,255,255,0.2); box-shadow:0 2px 10px rgba(0,255,255,0.2);
-  align-items:center; transition: all 0.3s; opacity:0; transform:translateY(-25px);
-  position:relative; overflow:hidden;
-}
-.table-row::after {
-  content:''; position:absolute; top:0; left:-100%; width:100%; height:100%;
-  background:linear-gradient(120deg, rgba(0,255,255,0) 0%, rgba(0,255,255,0.15) 50%, rgba(0,255,255,0) 100%);
-  transform:skewX(-20deg); transition:all 0.5s;
-}
-.table-row:hover::after { left:200%; transition:all 0.8s; }
-.table-row.show { opacity:1; transform:translateY(0); }
-.table-row:hover { transform:translateY(-3px) scale(1.02); }
-.current { border-left:4px solid #00f0ff; animation:pulse 1.5s infinite; }
-@keyframes pulse { 0%{box-shadow:0 0 5px rgba(0,240,255,0.5);} 50%{box-shadow:0 0 20px rgba(0,240,255,0.9);} 100%{box-shadow:0 0 5px rgba(0,240,255,0.5);} }
-.table-row div { text-align:center; font-weight:bold; font-size:1.1em; position:relative; transition:text-shadow 0.5s,color 0.5s; }
-.table-row div.nick { transition:text-shadow 0.7s; }
-.table-row.top1 { background: rgba(255,215,0,0.9); color:#000; }
-.table-row.top2 { background: rgba(192,192,192,0.9); color:#000; }
-.table-row.top3 { background: rgba(205,127,50,0.9); color:#000; }
-.role-player { color: #00f0ff; }
-.role-moderator { color: #f39c12; text-shadow:0 0 6px #f39c12,0 0 12px #f39c12; }
-.role-elder { color: #e74c3c; text-shadow:0 0 8px #e74c3c,0 0 15px #e74c3c; }
-.points {
-  transition: box-shadow 0.5s, color 0.5s;
-}
-/* Адаптив */
-@media screen and (max-width: 700px) { .table-row, .table-header { grid-template-columns: 1fr 2fr 2fr 2fr; } }
+body{margin:0;padding:20px;font-family:'Orbitron',sans-serif;background:#0b0c10;color:#00f0ff;display:flex;flex-direction:column;align-items:center;}
+h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:20px;}
+#leaderboard{width:95%;max-width:1000px;display:flex;flex-direction:column;gap:12px;}
+.table-header{display:grid;grid-template-columns:1fr 3fr 2fr 2fr;padding:12px 15px;border-radius:10px;background:rgba(0,0,0,0.7);border:1px solid rgba(0,255,255,0.4);text-align:center;font-weight:bold;text-shadow:0 0 5px #00f0ff;}
+.table-row{display:grid;grid-template-columns:1fr 3fr 2fr 2fr;padding:14px 16px;border-radius:10px;background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 10px rgba(0,255,255,0.2);align-items:center;transition:all 0.3s;opacity:0;transform:translateY(-25px);position:relative;overflow:hidden;}
+.table-row.show{opacity:1;transform:translateY(0);}
+.table-row:hover{transform:translateY(-3px) scale(1.02);}
+.current{border-left:4px solid #00f0ff;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 5px rgba(0,240,255,0.5);}50%{box-shadow:0 0 20px rgba(0,240,255,0.9);}100%{box-shadow:0 0 5px rgba(0,240,255,0.5);}}
+.table-row div{text-align:center;font-weight:bold;font-size:1.1em;position:relative;transition:text-shadow 0.5s,color 0.5s;}
+.role-player{color:#00f0ff;}
+.role-moderator{color:#3498db;text-shadow:0 0 6px #3498db,0 0 12px #3498db;}
+.role-elder{color:#1f8fff;text-shadow:0 0 8px #1f8fff,0 0 15px #1f8fff;}
+.points{transition:box-shadow 0.5s,color 0.5s;}
 </style>
 </head>
 <body>
-<h1>Лидерборд HUD Ultra Final</h1>
+<h1>Лидерборд HUD</h1>
 <div id="leaderboard">
-  <div class="table-header">
-    <div>Место</div><div>Ник</div><div>Баллы</div><div>Роль</div>
-  </div>
+<div class="table-header"><div>Место</div><div>Ник</div><div>Баллы</div><div>Роль</div></div>
 </div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 import { getFirestore, collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
-  authDomain: "gdboard-add4a.firebaseapp.com",
-  projectId: "gdboard-add4a",
-  storageBucket: "gdboard-add4a.firebasestorage.app",
-  messagingSenderId: "883125028740",
-  appId: "1:883125028740:web:c504de4139943b8606bfd1"
-};
+const firebaseConfig = {/* твой config */};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
-const leaderboardDiv = document.getElementById("leaderboard");
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return window.location.href = "index.html";
-  const userSnap = await getDoc(doc(db, "users", user.uid));
-  if (!userSnap.exists()) return window.location.href = "index.html";
-  const currentData = userSnap.data();
-  if (currentData.role === "player" && currentData.situation !== "verified") return window.location.href = "nick.html";
-
-  const usersRef = collection(db, "users");
-  const q = query(usersRef, orderBy("points","desc"));
-  const snapshot = await getDocs(q);
-  const usersArray = snapshot.docs.map(docItem => ({ id: docItem.id, ...docItem.data() }));
-
-  let prevPoints = null, prevRank=0, skip=1;
+const leaderboardDiv=document.getElementById('leaderboard');
+onAuthStateChanged(auth,async user=>{
+  if(!user) return window.location.href='index.html';
+  const userSnap = await getDoc(doc(db,'users',user.uid));
+  if(!userSnap.exists()) return window.location.href='index.html';
+  const currentData=userSnap.data();
+  if(currentData.role==='player' && currentData.situation!=='verified') return window.location.href='nick.html';
+  const usersRef=collection(db,'users');
+  const q=query(usersRef,orderBy('points','desc'));
+  const snapshot=await getDocs(q);
+  const usersArray=snapshot.docs.map(d=>({id:d.id,...d.data()}));
+  let prevPoints=null,prevRank=0,skip=1;
   usersArray.forEach((userData,index)=>{
+    if(userData.situation!=='verified' && userData.role==='player') return;
     const points=userData.points||0;
-    if(prevPoints===null || points<prevPoints){ prevRank+=skip; skip=1; } else { skip++; }
+    if(prevPoints===null || points<prevPoints){prevRank+=skip;skip=1;} else {skip++;}
     prevPoints=points;
-    if(userData.situation!=="verified" && userData.role==="player") return;
-
-    const row=document.createElement("div");
-    row.classList.add("table-row");
-    setTimeout(()=>row.classList.add("show"),index*80);
-    if(userData.id===user.uid) row.classList.add("current");
-    if(prevRank===1) row.classList.add("top1");
-    else if(prevRank===2) row.classList.add("top2");
-    else if(prevRank===3) row.classList.add("top3");
-
-    const roleClass=userData.role==="elder"?"role-elder":userData.role==="moderator"?"role-moderator":"role-player";
-
-    row.innerHTML=`
-      <div>${prevRank}</div>
-      <div class="nick">${userData.nick||"Не указан"}</div>
-      <div class="points">${points}</div>
-      <div class="${roleClass}">${userData.role==="elder"?"Старший модер":userData.role==="moderator"?"Модер":"Игрок"}</div>
-    `;
+    const row=document.createElement('div');
+    row.classList.add('table-row');
+    setTimeout(()=>row.classList.add('show'),index*80);
+    if(userData.id===user.uid) row.classList.add('current');
+    const roleClass=userData.role==='elder'?'role-elder':userData.role==='moderator'?'role-moderator':'role-player';
+    row.innerHTML=`<div>${prevRank}</div><div class="nick">${userData.nick||'Не указан'}</div><div class="points">${points}</div><div class="${roleClass}">${userData.role==='elder'?'Старший модер':userData.role==='moderator'?'Модер':'Игрок'}</div>`;
     leaderboardDiv.appendChild(row);
 
-    // Dynamic glow based on points
-    const minGlow=5, maxGlow=20;
-    const minPoints=0, maxPoints=1000; // adjust maxPoints to expected max in DB
-    const glowIntensity = minGlow + (Math.min(points,maxPoints)/maxPoints)*(maxGlow-minGlow);
-    const pointsDiv = row.querySelector('.points');
+    // Dynamic glow on points
+    const minGlow=5,maxGlow=20,minPoints=0,maxPoints=1000;
+    const glowIntensity=minGlow + Math.min(points,maxPoints)/maxPoints*(maxGlow-minGlow);
+    const pointsDiv=row.querySelector('.points');
     pointsDiv.style.textShadow=`0 0 ${glowIntensity}px #00f0ff,0 0 ${glowIntensity*1.5}px #00a0c0`;
-    // Slight pulsation
-    pointsDiv.animate([
-      { textShadow:`0 0 ${glowIntensity}px #00f0ff,0 0 ${glowIntensity*1.5}px #00a0c0` },
-      { textShadow:`0 0 ${glowIntensity*1.2}px #00f0ff,0 0 ${glowIntensity*1.7}px #00a0c0` }
-    ], { duration:1500, iterations:Infinity, direction:"alternate" });
+    pointsDiv.animate([{textShadow:`0 0 ${glowIntensity}px #00f0ff,0 0 ${glowIntensity*1.5}px #00a0c0`},{textShadow:`0 0 ${glowIntensity*1.2}px #00f0ff,0 0 ${glowIntensity*1.7}px #00a0c0`}],{duration:1500,iterations:Infinity,direction:'alternate'});
   });
 });
 </script>
