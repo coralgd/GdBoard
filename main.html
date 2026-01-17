@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <title>Главная</title>
+<link rel="stylesheet" href="style.css">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
@@ -21,13 +22,10 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const nickDisplay = document.getElementById("nickDisplay");
-const pointsDisplay = document.getElementById("pointsDisplay");
-const rankDisplay = document.getElementById("rankDisplay");
-const checkRoleBtn = document.getElementById("checkRoleBtn");
+const nickEl = document.getElementById("nick");
+const pointsEl = document.getElementById("points");
+const rankEl = document.getElementById("rank");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
-const roleMessage = document.getElementById("roleMessage");
-const logoutBtn = document.getElementById("logoutBtn");
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return window.location.href = "index.html";
@@ -37,62 +35,46 @@ onAuthStateChanged(auth, async (user) => {
   if (!userSnap.exists()) return window.location.href = "index.html";
 
   const data = userSnap.data();
-  const role = data.role || "player";
-  const situation = data.situation || "not requested";
+  if (data.situation !== "verified") return window.location.href = "nick.html";
 
-  if (role === "player" && situation !== "verified") return window.location.href = "nick.html";
+  nickEl.textContent = data.nick;
+  pointsEl.textContent = data.points;
 
-  nickDisplay.textContent = data.nick || "Не указан";
-  pointsDisplay.textContent = data.points || 0;
-
-  // Вычисляем место игрока
+  // Рассчёт ранга
   const usersRef = collection(db, "users");
   const q = query(usersRef, where("situation", "==", "verified"), orderBy("points", "desc"));
   const snapshot = await getDocs(q);
 
-  const usersArray = snapshot.docs.map(docItem => ({ id: docItem.id, ...docItem.data() }));
+  const usersArray = snapshot.docs.map(docItem => docItem.data());
   let prevPoints = null;
   let prevRank = 0;
 
-  usersArray.forEach((userData, index) => {
-    const points = userData.points || 0;
+  for (let i = 0; i < usersArray.length; i++) {
+    const userData = usersArray[i];
     let rank;
-    if (points === prevPoints) {
+    if (userData.points === prevPoints) {
       rank = prevRank;
     } else {
-      rank = index + 1;
-      prevPoints = points;
+      rank = i + 1;
+      prevPoints = userData.points;
       prevRank = rank;
     }
-    if (userData.id === user.uid) rankDisplay.textContent = rank;
-  });
-
-  checkRoleBtn.addEventListener("click", () => {
-    if (role === "moderator") window.location.href = "moderator.html";
-    else if (role === "elder") window.location.href = "elder.html";
-    else {
-      roleMessage.textContent = "Ошибка: модерки нет";
-      roleMessage.style.color = "red";
+    if (userData.nick === data.nick) {
+      rankEl.textContent = rank;
+      break;
     }
+  }
+
+  leaderboardBtn.addEventListener("click", () => {
+    window.location.href = "leaderboard.html";
   });
-
-  leaderboardBtn.addEventListener("click", () => window.location.href = "leaderboard.html");
-});
-
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "index.html";
 });
 </script>
 </head>
 <body>
-<h1>Главная</h1>
-<p>Ник: <span id="nickDisplay"></span></p>
-<p>Баллы: <span id="pointsDisplay"></span></p>
-<p>Место: <span id="rankDisplay"></span></p>
-<button id="checkRoleBtn">Проверить</button>
+<h1>Привет, <span id="nick"></span>!</h1>
+<p>Баллы: <span id="points"></span></p>
+<p>Место: <span id="rank"></span></p>
 <button id="leaderboardBtn">Лидерборд</button>
-<p id="roleMessage"></p>
-<button id="logoutBtn">Выйти</button>
 </body>
 </html>
