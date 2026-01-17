@@ -2,56 +2,46 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Ввод ника</title>
-<link rel="stylesheet" href="style.css">
+<title>Выбор ника</title>
+<style>
+body{margin:0;padding:20px;font-family:'Orbitron',sans-serif;background:#0b0c10;color:#00f0ff;display:flex;flex-direction:column;align-items:center;}
+h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:25px;}
+.card{background:rgba(0,0,0,0.55);padding:25px;border-radius:12px;border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 15px rgba(0,255,255,0.3);width:320px;}
+input{width:100%;padding:10px;margin:10px 0;border-radius:6px;border:none;background:#0b0c10;color:#00f0ff;outline:1px solid #00f0ff;}
+.button{width:100%;padding:12px;border:none;border-radius:8px;background:#00a0ff;color:#000;font-weight:bold;cursor:pointer;transition:0.3s;}
+.button:hover{background:#00f0ff;box-shadow:0 0 10px #00f0ff;color:#000;}
+</style>
+</head>
+<body>
+<h1>Выберите ник</h1>
+<div class="card">
+<input type="text" id="nickInput" placeholder="Никнейм">
+<button class="button" id="submitNick">Отправить</button>
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getFirestore, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
-  authDomain: "gdboard-add4a.firebaseapp.com",
-  projectId: "gdboard-add4a",
-  storageBucket: "gdboard-add4a.firebasestorage.app",
-  messagingSenderId: "883125028740",
-  appId: "1:883125028740:web:c504de4139943b8606bfd1"
-};
-
+const firebaseConfig = {/* твой config */};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const nickInput = document.getElementById("nickInput");
-const submitBtn = document.getElementById("submitNick");
-const situationSpan = document.getElementById("situation");
+const input=document.getElementById('nickInput');
+const btn=document.getElementById('submitNick');
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user) return window.location.href = "index.html";
-
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  if (!userSnap.exists()) return window.location.href = "index.html";
-
-  const data = userSnap.data();
-  if (data.situation === "requested" || data.situation === "verified") {
-    window.location.href = "main.html";
-  }
-
-  submitBtn.addEventListener("click", async () => {
-    const nick = nickInput.value.trim();
-    if (!nick) return alert("Введите ник!");
-    await updateDoc(userRef, { nick: nick, situation: "requested" });
-    situationSpan.textContent = "requested";
-    submitBtn.disabled = true;
+onAuthStateChanged(auth, async user=>{
+  if(!user) return window.location.href='index.html';
+  btn.addEventListener('click', async ()=>{
+    const nick=input.value.trim();
+    if(!nick) return alert('Введите ник');
+    const userRef = doc(db,'users',user.uid);
+    const data = {nick:nick, situation:'requested'};
+    await updateDoc(userRef,data);
+    alert('Ник отправлен! Ждите верификации.');
   });
 });
 </script>
-</head>
-<body>
-<h1>Введите ник</h1>
-<input type="text" id="nickInput" placeholder="Ваш ник" />
-<button id="submitNick">Отправить</button>
-<p>Статус: <span id="situation">not requested</span></p>
 </body>
 </html>
