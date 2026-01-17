@@ -8,18 +8,9 @@
 
 <div class="panel">
   <h2>Главная</h2>
-  <div class="row">
-    <div>Ваш ник:</div>
-    <div id="nick"></div>
-  </div>
-  <div class="row">
-    <div>Баллы:</div>
-    <div id="points"></div>
-  </div>
-  <div class="row">
-    <div>Место:</div>
-    <div id="place"></div>
-  </div>
+  <div class="row"><div>Ваш ник:</div><div id="nick"></div></div>
+  <div class="row"><div>Баллы:</div><div id="points"></div></div>
+  <div class="row"><div>Место:</div><div id="place"></div></div>
   <div class="row actions">
     <button id="leaderboardBtn">Лидерборд</button>
     <button id="checkBtn">Проверить</button>
@@ -33,7 +24,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 onAuthStateChanged(auth, async user => {
-  if(!user) location.href="login.html";
+  if(!user) location.href="index.html";
   const ref = doc(db,"users",user.uid);
   const data = (await getDoc(ref)).data();
 
