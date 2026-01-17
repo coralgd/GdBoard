@@ -1,37 +1,48 @@
-const canvas = document.getElementById("hud-bg");
-const ctx = canvas.getContext("2d");
+const canvas = document.getElementById('hud-bg');
+const ctx = canvas.getContext('2d');
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener("resize", resize);
-resize();
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-let offset = 0;
+let width = canvas.width;
+let height = canvas.height;
 
-function draw() {
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = "rgba(0,160,255,0.15)";
+function drawGrid() {
+  ctx.clearRect(0, 0, width, height);
+  
+  ctx.strokeStyle = "rgba(0, 150, 255, 0.2)";
   ctx.lineWidth = 1;
 
-  const size = 50;
-  offset = (offset + 0.3) % size;
-
-  for (let x = -size; x < canvas.width + size; x += size) {
+  const spacing = 40;
+  for(let x=0;x<width;x+=spacing){
     ctx.beginPath();
-    ctx.moveTo(x + offset, 0);
-    ctx.lineTo(x + offset, canvas.height);
+    ctx.moveTo(x,0);
+    ctx.lineTo(x,height);
     ctx.stroke();
   }
 
-  for (let y = -size; y < canvas.height + size; y += size) {
+  for(let y=0;y<height;y+=spacing){
     ctx.beginPath();
-    ctx.moveTo(0, y + offset);
-    ctx.lineTo(canvas.width, y + offset);
+    ctx.moveTo(0,y);
+    ctx.lineTo(width,y);
     ctx.stroke();
   }
-
-  requestAnimationFrame(draw);
 }
-draw();
+
+let offset = 0;
+function animate(){
+  offset += 0.5;
+  ctx.setTransform(1,0,0,1,0,offset);
+  drawGrid();
+  ctx.setTransform(1,0,0,1,0,0);
+  requestAnimationFrame(animate);
+}
+
+window.addEventListener("resize", ()=>{
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  width = canvas.width;
+  height = canvas.height;
+});
+
+animate();
