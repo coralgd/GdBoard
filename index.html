@@ -2,63 +2,83 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Вход/Регистрация</title>
-<style>
-body{margin:0;padding:20px;font-family:'Orbitron',sans-serif;background:#0b0c10;color:#00f0ff;display:flex;flex-direction:column;align-items:center;}
-h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:25px;}
-.card{background:rgba(0,0,0,0.55);padding:25px;border-radius:12px;border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 15px rgba(0,255,255,0.3);width:320px;}
-input{width:100%;padding:10px;margin:10px 0;border-radius:6px;border:none;background:#0b0c10;color:#00f0ff;outline:1px solid #00f0ff;}
-.button{width:100%;padding:12px;border:none;border-radius:8px;background:#00a0ff;color:#000;font-weight:bold;cursor:pointer;transition:0.3s;}
-.button:hover{background:#00f0ff;box-shadow:0 0 10px #00f0ff;color:#000;}
-.error{color:#ff5555;margin-top:10px;text-align:center;}
-</style>
+<title>Leaderboard</title>
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
-<h1>Добро пожаловать</h1>
-<div class="card">
-<input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Пароль">
-<button class="button" id="loginBtn">Войти</button>
-<button class="button" id="registerBtn">Регистрация</button>
-<div class="error" id="err"></div>
+
+<div class="app">
+  <div class="panel">
+    <h1>Лидерборд</h1>
+    <div class="hud-line"></div>
+
+    <div class="list" id="list"></div>
+  </div>
 </div>
+
+<script src="hudBackground.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-// 🔹 Исправленный рабочий конфиг
-const firebaseConfig = {
+const app = initializeApp({
   apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
   authDomain: "gdboard-add4a.firebaseapp.com",
-  projectId: "gdboard-add4a",
-  storageBucket: "gdboard-add4a.appspot.com",
-  messagingSenderId: "883125028740",
-  appId: "1:883125028740:web:c504de4139943b8606bfd1"
-};
+  projectId: "gdboard-add4a"
+});
 
-const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const emailEl=document.getElementById('email'), passEl=document.getElementById('password'), errEl=document.getElementById('err');
-document.getElementById('loginBtn').addEventListener('click', async ()=>{
-  try{
-    const cred = await signInWithEmailAndPassword(auth,emailEl.value,passEl.value);
-    window.location.href='main.html';
-  } catch(e){ errEl.textContent=e.message; }
-});
-document.getElementById('registerBtn').addEventListener('click', async ()=>{
-  try{
-    const cred = await createUserWithEmailAndPassword(auth,emailEl.value,passEl.value);
-    await setDoc(doc(db,'users',cred.user.uid),{
-      nick:'',
-      points:0,
-      situation:'not requested',
-      role:'player'
-    });
-    window.location.href='nick.html';
-  } catch(e){ errEl.textContent=e.message; }
+const list = document.getElementById("list");
+
+onAuthStateChanged(auth, async user => {
+  if (!user) return location.href = "index.html";
+
+  const q = query(
+    collection(db, "users"),
+    where("situation", "==", "verified"),
+    orderBy("points", "desc")
+  );
+
+  const snap = await getDocs(q);
+
+  let place = 0;
+  let lastPoints = null;
+  let shown = 0;
+
+  snap.forEach(docu => {
+    const u = docu.data();
+    shown++;
+
+    if (u.points !== lastPoints) {
+      place = shown;
+      lastPoints = u.points;
+    }
+
+    const row = document.createElement("div");
+    row.className = "row" + (docu.id === user.uid ? " me" : "");
+
+    let roleClass = "";
+    let roleText = "";
+    if (u.role === "elder") {
+      roleClass = "role-elder";
+      roleText = "Старший модер";
+    } else if (u.role === "moderator") {
+      roleClass = "role-moderator";
+      roleText = "Модератор";
+    }
+
+    row.innerHTML = `
+      <div>${place}</div>
+      <div class="${roleClass}">${u.nick} ${roleText}</div>
+      <div>${u.points}</div>
+      <div></div>
+    `;
+
+    list.appendChild(row);
+  });
 });
 </script>
 </body>
