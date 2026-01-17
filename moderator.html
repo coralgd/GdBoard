@@ -6,7 +6,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { getFirestore, collection, query, where, getDocs, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs, doc, updateDoc, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
@@ -25,29 +25,44 @@ const usersList = document.getElementById("usersList");
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return window.location.href = "index.html";
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDocs(userRef);
 
-  const userData = (await getDoc(userRef)).data();
-  if (userData.role !== "moderator" && userData.role !== "elder") window.location.href = "main.html";
+  const currentUserRef = doc(db, "users", user.uid);
+  const currentUserSnap = await getDoc(currentUserRef);
+  if (!currentUserSnap.exists()) return window.location.href = "index.html";
 
+  const currentData = currentUserSnap.data();
+  const role = currentData.role || "player";
+
+  // Проверка роли — только модератор и старший модератор
+  if (role !== "moderator" && role !== "elder") {
+    alert("Нет доступа к панели модератора!");
+    return window.location.href = "main.html";
+  }
+
+  // Получаем всех verified пользователей кроме модеров и старших
   const usersRef = collection(db, "users");
   const q = query(usersRef, where("situation", "==", "verified"), orderBy("points", "desc"));
   const snapshot = await getDocs(q);
 
   usersList.innerHTML = "";
+
   snapshot.forEach(docItem => {
     const u = docItem.data();
-    if (u.role === "moderator" || u.role === "elder") return;
+    if (u.role === "moderator" || u.role === "elder") return; // не показываем модеров и старших
 
     const li = document.createElement("li");
-    li.innerHTML = `${u.nick} <input type="number" value="${u.points}" style="width:50px;"> <button>Изменить</button>`;
+    li.innerHTML = `
+      ${u.nick || "Не указан"} — 
+      <input type="number" value="${u.points}" style="width:50px;">
+      <button class="changePoints">Изменить</button>
+    `;
+
     const input = li.querySelector("input");
-    const btn = li.querySelector("button");
+    const btn = li.querySelector(".changePoints");
 
     btn.addEventListener("click", async () => {
       await updateDoc(doc(db, "users", docItem.id), { points: Number(input.value) });
-      alert("Баллы изменены!");
+      alert("Баллы обновлены!");
     });
 
     usersList.appendChild(li);
