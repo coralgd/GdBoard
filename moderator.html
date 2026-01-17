@@ -5,26 +5,33 @@
 <title>Панель модератора</title>
 <style>
 body{margin:0;padding:20px;font-family:'Orbitron',sans-serif;background:#0b0c10;color:#00f0ff;display:flex;flex-direction:column;align-items:center;}
-h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:25px;}
+h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:20px;}
 #usersList{width:95%;max-width:900px;display:flex;flex-direction:column;gap:12px;}
-.user-card{display:grid;grid-template-columns:3fr 2fr 2fr;padding:12px 15px;border-radius:10px;background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 10px rgba(0,255,255,0.2);transition:all 0.3s;opacity:0;transform:translateY(-20px);}
-.user-card.show{opacity:1;transform:translateY(0);}
-.user-card:hover{transform:translateY(-2px) scale(1.02);}
-input.points-input{width:80%;padding:6px;border-radius:5px;border:none;background:#0b0c10;color:#00f0ff;outline:1px solid #00f0ff;}
-button.change-btn{padding:6px 10px;border:none;border-radius:6px;background:#00a0ff;color:#000;font-weight:bold;cursor:pointer;transition:0.3s;}
-button.change-btn:hover{background:#00f0ff;box-shadow:0 0 10px #00f0ff;color:#000;}
-.error{color:#ff5555;margin-top:10px;text-align:center;}
+.row{display:grid;grid-template-columns:2fr 80px 100px;padding:12px;border-radius:10px;background:rgba(0,0,0,0.55);border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 10px rgba(0,255,255,0.2);align-items:center;transition:all 0.3s;opacity:0;transform:translateY(-20px);}
+.row.show{opacity:1;transform:translateY(0);}
+input{padding:5px;border-radius:6px;border:none;background:#0b0c10;color:#00f0ff;outline:1px solid #00f0ff;width:60px;text-align:center;}
+.button{padding:5px 10px;border:none;border-radius:6px;background:#00a0ff;color:#000;font-weight:bold;cursor:pointer;transition:0.3s;}
+.button:hover{background:#00f0ff;box-shadow:0 0 10px #00f0ff;color:#000;}
 </style>
 </head>
 <body>
 <h1>Панель модератора</h1>
 <div id="usersList"></div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDocs, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-const firebaseConfig = {/* твой config */};
+const firebaseConfig = {
+  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
+  authDomain: "gdboard-add4a.firebaseapp.com",
+  projectId: "gdboard-add4a",
+  storageBucket: "gdboard-add4a.appspot.com",
+  messagingSenderId: "883125028740",
+  appId: "1:883125028740:web:c504de4139943b8606bfd1"
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
@@ -32,32 +39,30 @@ const usersList=document.getElementById('usersList');
 
 onAuthStateChanged(auth, async user=>{
   if(!user) return window.location.href='index.html';
-  const userSnap = await getDoc(doc(db,'users',user.uid));
-  if(!userSnap.exists()) return window.location.href='index.html';
-  const data=userSnap.data();
-  if(data.role!=='moderator' && data.role!=='elder') return window.location.href='main.html';
+  const uRef=doc(db,'users',user.uid);
+  const uSnap=await getDocs(collection(db,'users'));
+  const currentUser=(await (await getDocs(collection(db,'users'))).docs.find(d=>d.id===user.uid)).data();
+  if(currentUser.role!=='moderator' && currentUser.role!=='elder') return window.location.href='main.html';
 
-  const usersRef=collection(db,'users');
-  const snapshot=await getDocs(usersRef);
-  const usersArr=snapshot.docs.filter(d=>d.data().role==='player' && d.data().situation==='verified').map(d=>({id:d.id,...d.data()}));
-
-  usersArr.forEach((u,index)=>{
-    const card=document.createElement('div');
-    card.classList.add('user-card');
-    setTimeout(()=>card.classList.add('show'),index*80);
-    card.innerHTML=`
-      <div>${u.nick||'Не указан'}</div>
-      <div><input type="number" class="points-input" value="${u.points||0}"></div>
-      <div><button class="change-btn">Изменить</button></div>
-    `;
-    const btn=card.querySelector('.change-btn');
-    const input=card.querySelector('.points-input');
-    btn.addEventListener('click',async ()=>{
-      await updateDoc(doc(db,'users',u.id),{points:parseInt(input.value)});
-      btn.textContent='Готово';
-      setTimeout(()=>btn.textContent='Изменить',1000);
+  const q=query(collection(db,'users'),where('situation','==','verified'),orderBy('points','desc'));
+  const snap=await getDocs(q);
+  let index=0;
+  snap.forEach(d=>{
+    const u=d.data();
+    if(u.role==='moderator' || u.role==='elder') return; // не показывать модеров
+    const row=document.createElement('div');
+    row.classList.add('row');
+    row.innerHTML=`<div>${u.nick||'Не указан'}</div>
+                     <input type="number" value="${u.points||0}" id="points_${d.id}">
+                     <button class="button" id="btn_${d.id}">Изменить</button>`;
+    usersList.appendChild(row);
+    setTimeout(()=>row.classList.add('show'),index*50);
+    document.getElementById(`btn_${d.id}`).addEventListener('click', async ()=>{
+      const val=document.getElementById(`points_${d.id}`).value;
+      await updateDoc(doc(db,'users',d.id),{points:Number(val)});
+      alert('Баллы обновлены!');
     });
-    usersList.appendChild(card);
+    index++;
   });
 });
 </script>
