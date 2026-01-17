@@ -1,86 +1,43 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Лидерборд</title>
-  <link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="styles.css">
 </head>
 <body>
 <canvas id="hud-bg"></canvas>
-
-<div class="panel">
-  <h2>Лидерборд</h2>
-  <div class="table">
-    <div class="row header">
-      <div>Место</div>
-      <div>Ник</div>
-      <div>Баллы</div>
-      <div>Роль</div>
-    </div>
-    <div id="board"></div>
-  </div>
-</div>
+<div class="panel" id="list"></div>
 
 <script type="module">
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, async user=>{
   if(!user) location.href="index.html";
+  const snap = await getDocs(collection(db,"users"));
+  let users = snap.docs.map(d=>({id:d.id,...d.data()}));
+  users = users.sort((a,b)=>b.points - a.points);
 
-  const boardContainer = document.getElementById("board");
-  boardContainer.innerHTML = "";
-
-  // Получаем всех VERIFIED
-  const q = query(
-    collection(db,"users"),
-    where("situation","==","verified"),
-    orderBy("points","desc")
-  );
-
-  const snapshot = await getDocs(q);
-
-  let lastPoints = null;
-  let place = 0;
-  let skip = 1; // для одинаковых баллов
-
-  snapshot.docs.forEach((docSnap, idx) => {
-    const data = docSnap.data();
-    let displayPlace;
-
-    if(lastPoints === data.points){
-      // одинаковое место
-      displayPlace = place;
-      skip++;
-    } else {
-      place += skip;
-      displayPlace = place;
-      skip = 1;
-      lastPoints = data.points;
-    }
+  let rank=1, lastPoints=null, actualRank=1;
+  users.forEach(u=>{
+    if(lastPoints!==null && u.points!==lastPoints) actualRank=rank;
+    lastPoints=u.points;
 
     const row = document.createElement("div");
-    row.classList.add("row");
+    row.className="row";
+    let roleLabel = "";
+    if(u.role==="moderator") roleLabel=" Модер";
+    if(u.role==="elder") roleLabel=" Старший мод.";
 
-    // Цвета и роль
-    let roleDisplay = "";
-    let roleColor = "#ccc";
-    if(data.role==="moderator") roleDisplay="Модер", roleColor="#ffdd57";
-    if(data.role==="elder") roleDisplay="Старший модер", roleColor="#ff5555";
-
-    // Ник текущего пользователя
-    let nickDisplay = data.nick;
-    if(docSnap.id === user.uid) nickDisplay = `<span style="color:#00cfff">${data.nick}</span>`;
-
-    row.innerHTML = `
-      <div>${displayPlace}</div>
-      <div>${nickDisplay}</div>
-      <div>${data.points}</div>
-      <div style="color:${roleColor}">${roleDisplay}</div>
+    row.innerHTML=`
+      <div>${rank}</div>
+      <div>${u.nick||"(no nick)"}${roleLabel}</div>
+      <div>${u.points}</div>
     `;
+    if(u.id===user.uid) row.style.color="#00cfff";
 
-    boardContainer.appendChild(row);
+    document.getElementById("list").append(row);
+    rank++;
   });
 });
 </script>
