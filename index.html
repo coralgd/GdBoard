@@ -4,37 +4,14 @@
   <meta charset="UTF-8">
   <title>GDBoard - Вход/Регистрация</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    /* Временно делаем карточку большую и по центру */
-    .panel {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .card.full-card {
-      width: 500px;
-      height: 400px;
-      background: linear-gradient(145deg, #1e1e1e, #2b2b2b);
-      border: 2px solid #00aaff;
-      border-radius: 20px;
-      box-shadow: 0 0 20px #00aaff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 24px;
-      color: #00aaff;
-      text-align: center;
-    }
-  </style>
 </head>
 <body>
 <canvas id="hud-bg"></canvas>
 
 <div class="panel">
-  <div class="card full-card">
-    <!-- Пустая большая карточка для HUD -->
-    HUD-Карточка
+  <!-- Единая HUD-карточка, как в лидерборде/панели модера -->
+  <div class="card hud-card" style="width: 500px; height: 400px; display: flex; justify-content: center; align-items: center;">
+    <span style="color:#00aaff; font-size:24px;">HUD-Карточка</span>
   </div>
 </div>
 
