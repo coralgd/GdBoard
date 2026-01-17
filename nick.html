@@ -27,6 +27,7 @@ onAuthStateChanged(auth, async user => {
 
   const ref = doc(db,"users",user.uid);
   const snap = await getDoc(ref);
+
   if(!snap.exists()){
     await setDoc(ref,{
       nick:"",
@@ -37,7 +38,11 @@ onAuthStateChanged(auth, async user => {
   }
 
   const data = (await getDoc(ref)).data();
-  if(data.situation==="requested") location.href="main.html";
+
+  // Редирект только если VERIFIED
+  if(data.situation==="verified"){
+    location.href="main.html";
+  }
 
   document.getElementById("sendNick").onclick = async () => {
     const nick = document.getElementById("nickInput").value.trim();
