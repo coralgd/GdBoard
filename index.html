@@ -30,13 +30,23 @@ const status = document.getElementById("status");
 document.getElementById("loginBtn").onclick = async () => {
   try {
     await signInWithEmailAndPassword(auth, emailInput.value, passInput.value);
-  } catch(e){ status.innerText = e.message; }
+    console.log("Успешный вход");
+    location.href="nick.html";
+  } catch(e){
+    console.error(e);
+    status.innerText = e.message;
+  }
 };
 
 document.getElementById("registerBtn").onclick = async () => {
   try {
     await createUserWithEmailAndPassword(auth, emailInput.value, passInput.value);
-  } catch(e){ status.innerText = e.message; }
+    console.log("Регистрация успешна");
+    location.href="nick.html";
+  } catch(e){
+    console.error(e);
+    status.innerText = e.message;
+  }
 };
 </script>
 <script src="hudBackground.js"></script>
