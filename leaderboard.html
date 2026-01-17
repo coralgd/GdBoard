@@ -5,23 +5,25 @@
 <title>Лидерборд</title>
 <link rel="stylesheet" href="style.css">
 <style>
+/* Общий фон */
 body {
   margin: 0;
   padding: 20px;
   font-family: 'Orbitron', sans-serif;
-  background: linear-gradient(160deg, #2c3e50, #34495e); /* темно-синий фон */
+  background: linear-gradient(160deg, #1f2c3a, #2c3e50);
   display: flex;
   flex-direction: column;
   align-items: center;
   min-height: 100vh;
   color: #ecf0f1;
+  overflow-x: hidden;
 }
 
 h1 {
   font-size: 2.5em;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
   color: #ecf0f1;
-  text-shadow: 1px 1px 4px rgba(0,0,0,0.5);
+  text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
 }
 
 /* Контейнер лидерборда */
@@ -43,9 +45,10 @@ h1 {
   color: #fff;
   font-weight: bold;
   text-align: center;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
 
-/* Карточка игрока */
+/* Карточки игроков */
 .table-row {
   display: grid;
   grid-template-columns: 1fr 3fr 2fr 2fr;
@@ -54,29 +57,48 @@ h1 {
   background: linear-gradient(145deg, #34495e, #3d566e);
   box-shadow: 0 3px 8px rgba(0,0,0,0.3);
   align-items: center;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
+  opacity: 0;
+  transform: translateY(-20px);
 }
 
+/* Анимация появления */
+.table-row.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hover эффект */
 .table-row:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px) scale(1.02);
   box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  background: linear-gradient(145deg, #3d566e, #4a6a82);
 }
 
 /* Текущий игрок */
 .current {
   border-left: 5px solid #8e44ad;
+  animation: pulse 1.5s infinite;
+}
+
+/* Pulse анимация */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0px rgba(142,68,173,0.5); }
+  50% { box-shadow: 0 0 15px rgba(142,68,173,0.8); }
+  100% { box-shadow: 0 0 0px rgba(142,68,173,0.5); }
 }
 
 /* Колонки */
 .table-row div {
   text-align: center;
   font-weight: bold;
+  font-size: 1.05em;
 }
 
 /* Цвета ролей */
-.role-player { color: #ecf0f1; }       /* Игрок */
-.role-moderator { color: #f39c12; }   /* Модер */
-.role-elder { color: #e74c3c; }       /* Старший модер */
+.role-player { color: #ecf0f1; }
+.role-moderator { color: #f39c12; text-shadow: 0 0 3px #f39c12; }
+.role-elder { color: #e74c3c; text-shadow: 0 0 5px #e74c3c; }
 
 /* Адаптив */
 @media screen and (max-width: 700px) {
@@ -136,7 +158,7 @@ onAuthStateChanged(auth, async (user) => {
   let prevRank = 0;
   let skip = 1;
 
-  usersArray.forEach((userData) => {
+  usersArray.forEach((userData, index) => {
     const points = userData.points || 0;
     if (prevPoints === null || points < prevPoints) {
       prevRank += skip;
@@ -151,6 +173,7 @@ onAuthStateChanged(auth, async (user) => {
 
     const row = document.createElement("div");
     row.classList.add("table-row");
+    setTimeout(() => row.classList.add("show"), index * 100); // анимация появления с задержкой
     if (userData.id === user.uid) row.classList.add("current");
 
     const roleClass = userData.role === "elder" ? "role-elder" : userData.role === "moderator" ? "role-moderator" : "role-player";
