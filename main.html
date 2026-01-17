@@ -1,110 +1,98 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <title>Главная</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-    import { getFirestore, collection, query, where, orderBy, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+<meta charset="UTF-8">
+<title>Главная</title>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
-      authDomain: "gdboard-add4a.firebaseapp.com",
-      projectId: "gdboard-add4a",
-      storageBucket: "gdboard-add4a.firebasestorage.app",
-      messagingSenderId: "883125028740",
-      appId: "1:883125028740:web:c504de4139943b8606bfd1"
-    };
+const firebaseConfig = {
+  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
+  authDomain: "gdboard-add4a.firebaseapp.com",
+  projectId: "gdboard-add4a",
+  storageBucket: "gdboard-add4a.firebasestorage.app",
+  messagingSenderId: "883125028740",
+  appId: "1:883125028740:web:c504de4139943b8606bfd1"
+};
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-    const checkBtn = document.getElementById("checkRoleBtn");
-    const roleMessage = document.getElementById("roleMessage");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const nickDisplay = document.getElementById("nickDisplay");
-    const leaderboardBtn = document.getElementById("leaderboardBtn");
-    const pointsDisplay = document.getElementById("pointsDisplay");
-    const rankDisplay = document.getElementById("rankDisplay");
+const nickDisplay = document.getElementById("nickDisplay");
+const pointsDisplay = document.getElementById("pointsDisplay");
+const rankDisplay = document.getElementById("rankDisplay");
+const checkRoleBtn = document.getElementById("checkRoleBtn");
+const leaderboardBtn = document.getElementById("leaderboardBtn");
+const roleMessage = document.getElementById("roleMessage");
+const logoutBtn = document.getElementById("logoutBtn");
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return window.location.href = "index.html";
+onAuthStateChanged(auth, async (user) => {
+  if (!user) return window.location.href = "index.html";
 
-      const userDocSnap = await getDoc(doc(db, "users", user.uid));
-      if (!userDocSnap.exists()) return window.location.href = "index.html";
+  const userRef = doc(db, "users", user.uid);
+  const userSnap = await getDoc(userRef);
+  if (!userSnap.exists()) return window.location.href = "index.html";
 
-      const data = userDocSnap.data();
-      const role = data.role || "player";
-      const situation = data.situation || "not requested";
+  const data = userSnap.data();
+  const role = data.role || "player";
+  const situation = data.situation || "not requested";
 
-      if (role === "player" && situation !== "verified") {
-        return window.location.href = "nick.html";
-      }
+  if (role === "player" && situation !== "verified") return window.location.href = "nick.html";
 
-      nickDisplay.textContent = data.nick || "Не указан";
-      pointsDisplay.textContent = data.points || 0;
+  nickDisplay.textContent = data.nick || "Не указан";
+  pointsDisplay.textContent = data.points || 0;
 
-      // Вычисляем место игрока по “спортивной системе”
-      const usersRef = collection(db, "users");
-      const q = query(
-        usersRef,
-        where("situation", "==", "verified"),
-        orderBy("points", "desc")
-      );
-      const snapshot = await getDocs(q);
+  // Вычисляем место игрока
+  const usersRef = collection(db, "users");
+  const q = query(usersRef, where("situation", "==", "verified"), orderBy("points", "desc"));
+  const snapshot = await getDocs(q);
 
-      let prevPoints = null;
-      let rank = 0;
-      let skipped = 0;
+  const usersArray = snapshot.docs.map(docItem => ({ id: docItem.id, ...docItem.data() }));
+  let prevPoints = null;
+  let prevRank = 0;
 
-      snapshot.forEach((docItem) => {
-        const points = docItem.data().points || 0;
+  usersArray.forEach((userData, index) => {
+    const points = userData.points || 0;
+    let rank;
+    if (points === prevPoints) {
+      rank = prevRank;
+    } else {
+      rank = index + 1;
+      prevPoints = points;
+      prevRank = rank;
+    }
+    if (userData.id === user.uid) rankDisplay.textContent = rank;
+  });
 
-        if (prevPoints === points) {
-          skipped++;
-        } else {
-          rank += skipped + 1;
-          skipped = 0;
-          prevPoints = points;
-        }
+  checkRoleBtn.addEventListener("click", () => {
+    if (role === "moderator") window.location.href = "moderator.html";
+    else if (role === "elder") window.location.href = "elder.html";
+    else {
+      roleMessage.textContent = "Ошибка: модерки нет";
+      roleMessage.style.color = "red";
+    }
+  });
 
-        if (docItem.id === user.uid) {
-          rankDisplay.textContent = rank;
-        }
-      });
+  leaderboardBtn.addEventListener("click", () => window.location.href = "leaderboard.html");
+});
 
-      checkBtn.addEventListener("click", async () => {
-        if (role === "moderator") {
-          window.location.href = "moderator.html";
-        } else if (role === "elder") {
-          window.location.href = "elder.html";
-        } else {
-          roleMessage.textContent = "Ошибка: модерки нет";
-          roleMessage.style.color = "red";
-        }
-      });
-
-      leaderboardBtn.addEventListener("click", () => {
-        window.location.href = "leaderboard.html";
-      });
-    });
-
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "index.html";
-    });
-  </script>
+logoutBtn.addEventListener("click", async () => {
+  await signOut(auth);
+  window.location.href = "index.html";
+});
+</script>
 </head>
 <body>
-  <h1>Главная</h1>
-  <p>Ваш ник: <span id="nickDisplay"></span></p>
-  <p>Баллы: <span id="pointsDisplay"></span></p>
-  <p>Место на лидерборде: <span id="rankDisplay"></span></p>
-  <button id="checkRoleBtn">Проверить</button>
-  <button id="leaderboardBtn">Лидерборд</button>
-  <p id="roleMessage"></p>
-  <button id="logoutBtn">Выйти</button>
+<h1>Главная</h1>
+<p>Ник: <span id="nickDisplay"></span></p>
+<p>Баллы: <span id="pointsDisplay"></span></p>
+<p>Место: <span id="rankDisplay"></span></p>
+<button id="checkRoleBtn">Проверить</button>
+<button id="leaderboardBtn">Лидерборд</button>
+<p id="roleMessage"></p>
+<button id="logoutBtn">Выйти</button>
 </body>
 </html>
