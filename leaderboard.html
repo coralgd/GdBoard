@@ -10,7 +10,15 @@
 
 <div class="panel">
   <h2>Лидерборд</h2>
-  <div id="board" class="table"></div>
+  <div class="table">
+    <div class="row header">
+      <div>Место</div>
+      <div>Ник</div>
+      <div>Баллы</div>
+      <div>Роль</div>
+    </div>
+    <div id="board"></div>
+  </div>
 </div>
 
 <script type="module">
@@ -24,7 +32,7 @@ onAuthStateChanged(auth, async user => {
   const boardContainer = document.getElementById("board");
   boardContainer.innerHTML = "";
 
-  // Только verified пользователи, сортировка по points desc
+  // Получаем всех VERIFIED
   const q = query(
     collection(db,"users"),
     where("situation","==","verified"),
@@ -35,13 +43,14 @@ onAuthStateChanged(auth, async user => {
 
   let lastPoints = null;
   let place = 0;
-  let skip = 1;
+  let skip = 1; // для одинаковых баллов
 
-  snapshot.docs.forEach(docSnap => {
+  snapshot.docs.forEach((docSnap, idx) => {
     const data = docSnap.data();
     let displayPlace;
 
     if(lastPoints === data.points){
+      // одинаковое место
       displayPlace = place;
       skip++;
     } else {
@@ -51,19 +60,25 @@ onAuthStateChanged(auth, async user => {
       lastPoints = data.points;
     }
 
-    // Ник текущего пользователя
-    let nickDisplay = data.nick;
-    if(docSnap.id === user.uid) nickDisplay = `${data.nick} (Вы)`;
-
-    // Роль
-    let roleDisplay = "";
-    if(data.role==="moderator") roleDisplay="Модер";
-    if(data.role==="elder") roleDisplay="Старший модер";
-
-    // В одну строку через пробел
     const row = document.createElement("div");
     row.classList.add("row");
-    row.innerText = `${displayPlace} ${nickDisplay} ${data.points} ${roleDisplay}`;
+
+    // Цвета и роль
+    let roleDisplay = "";
+    let roleColor = "#ccc";
+    if(data.role==="moderator") roleDisplay="Модер", roleColor="#ffdd57";
+    if(data.role==="elder") roleDisplay="Старший модер", roleColor="#ff5555";
+
+    // Ник текущего пользователя
+    let nickDisplay = data.nick;
+    if(docSnap.id === user.uid) nickDisplay = `<span style="color:#00cfff">${data.nick}</span>`;
+
+    row.innerHTML = `
+      <div>${displayPlace}</div>
+      <div>${nickDisplay}</div>
+      <div>${data.points}</div>
+      <div style="color:${roleColor}">${roleDisplay}</div>
+    `;
 
     boardContainer.appendChild(row);
   });
