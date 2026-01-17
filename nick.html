@@ -2,7 +2,8 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Ник</title>
+<title>Ввод ника</title>
+<link rel="stylesheet" href="style.css">
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
@@ -23,7 +24,7 @@ const db = getFirestore(app);
 
 const nickInput = document.getElementById("nickInput");
 const submitBtn = document.getElementById("submitNick");
-const statusMessage = document.getElementById("statusMessage");
+const situationSpan = document.getElementById("situation");
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return window.location.href = "index.html";
@@ -33,30 +34,24 @@ onAuthStateChanged(auth, async (user) => {
   if (!userSnap.exists()) return window.location.href = "index.html";
 
   const data = userSnap.data();
-  if (data.situation === "verified") return window.location.href = "main.html";
-  if (data.nick) nickInput.value = data.nick;
-});
+  if (data.situation === "requested" || data.situation === "verified") {
+    window.location.href = "main.html";
+  }
 
-submitBtn.addEventListener("click", async () => {
-  const nick = nickInput.value.trim();
-  if (!nick) return;
-
-  const user = auth.currentUser;
-  const userRef = doc(db, "users", user.uid);
-  const userSnap = await getDoc(userRef);
-  const data = userSnap.data();
-
-  if (data.situation === "requested" || data.situation === "verified") return;
-
-  await updateDoc(userRef, { nick, situation: "requested" });
-  statusMessage.textContent = "Ник отправлен!";
+  submitBtn.addEventListener("click", async () => {
+    const nick = nickInput.value.trim();
+    if (!nick) return alert("Введите ник!");
+    await updateDoc(userRef, { nick: nick, situation: "requested" });
+    situationSpan.textContent = "requested";
+    submitBtn.disabled = true;
+  });
 });
 </script>
 </head>
 <body>
 <h1>Введите ник</h1>
-<input id="nickInput" placeholder="Ник" />
+<input type="text" id="nickInput" placeholder="Ваш ник" />
 <button id="submitNick">Отправить</button>
-<p id="statusMessage"></p>
+<p>Статус: <span id="situation">not requested</span></p>
 </body>
 </html>
