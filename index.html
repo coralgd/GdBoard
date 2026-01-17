@@ -2,74 +2,56 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Вход / Регистрация</title>
-<link rel="stylesheet" href="style.css">
+<title>Вход/Регистрация</title>
+<style>
+body{margin:0;padding:20px;font-family:'Orbitron',sans-serif;background:#0b0c10;color:#00f0ff;display:flex;flex-direction:column;align-items:center;}
+h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:25px;}
+.card{background:rgba(0,0,0,0.55);padding:25px;border-radius:12px;border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 15px rgba(0,255,255,0.3);width:320px;}
+input{width:100%;padding:10px;margin:10px 0;border-radius:6px;border:none;background:#0b0c10;color:#00f0ff;outline:1px solid #00f0ff;}
+.button{width:100%;padding:12px;border:none;border-radius:8px;background:#00a0ff;color:#000;font-weight:bold;cursor:pointer;transition:0.3s;}
+.button:hover{background:#00f0ff;box-shadow:0 0 10px #00f0ff;color:#000;}
+.error{color:#ff5555;margin-top:10px;text-align:center;}
+</style>
+</head>
+<body>
+<h1>Добро пожаловать</h1>
+<div class="card">
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Пароль">
+<button class="button" id="loginBtn">Войти</button>
+<button class="button" id="registerBtn">Регистрация</button>
+<div class="error" id="err"></div>
+</div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
-  authDomain: "gdboard-add4a.firebaseapp.com",
-  projectId: "gdboard-add4a",
-  storageBucket: "gdboard-add4a.firebasestorage.app",
-  messagingSenderId: "883125028740",
-  appId: "1:883125028740:web:c504de4139943b8606bfd1"
-};
-
+const firebaseConfig = {/* твой config */};
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-const regForm = document.getElementById("regForm");
-const loginForm = document.getElementById("loginForm");
-
-regForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = regForm.email.value;
-  const password = regForm.password.value;
-
-  try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = userCredential.user.uid;
-    await setDoc(doc(db, "users", uid), {
-      points: 0,
-      situation: "not requested",
-      role: "player"
-    });
-    window.location.href = "nick.html";
-  } catch (err) {
-    alert("Ошибка регистрации: " + err.message);
-  }
+const emailEl=document.getElementById('email'), passEl=document.getElementById('password'), errEl=document.getElementById('err');
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  try{
+    const cred = await signInWithEmailAndPassword(auth,emailEl.value,passEl.value);
+    window.location.href='main.html';
+  } catch(e){ errEl.textContent=e.message; }
 });
-
-loginForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const email = loginForm.email.value;
-  const password = loginForm.password.value;
-  try {
-    await signInWithEmailAndPassword(auth, email, password);
-    window.location.href = "nick.html";
-  } catch (err) {
-    alert("Ошибка входа: " + err.message);
-  }
+document.getElementById('registerBtn').addEventListener('click', async ()=>{
+  try{
+    const cred = await createUserWithEmailAndPassword(auth,emailEl.value,passEl.value);
+    // создаем документ в users
+    await setDoc(doc(db,'users',cred.user.uid),{
+      nick:'',
+      points:0,
+      situation:'not requested',
+      role:'player'
+    });
+    window.location.href='nick.html';
+  } catch(e){ errEl.textContent=e.message; }
 });
 </script>
-</head>
-<body>
-<h1>Регистрация</h1>
-<form id="regForm">
-  <input name="email" type="email" placeholder="Email" required />
-  <input name="password" type="password" placeholder="Пароль" required />
-  <button>Зарегистрироваться</button>
-</form>
-
-<h1>Вход</h1>
-<form id="loginForm">
-  <input name="email" type="email" placeholder="Email" required />
-  <input name="password" type="password" placeholder="Пароль" required />
-  <button>Войти</button>
-</form>
 </body>
 </html>
