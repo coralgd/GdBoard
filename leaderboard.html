@@ -5,12 +5,12 @@
 <title>Лидерборд</title>
 <link rel="stylesheet" href="style.css">
 <style>
-/* Общий фон */
+/* Общий фон: темный техногенный с градиентом и subtle линиями */
 body {
   margin: 0;
   padding: 20px;
   font-family: 'Orbitron', sans-serif;
-  background: linear-gradient(160deg, #1f2c3a, #2c3e50);
+  background: linear-gradient(160deg, #0d1117, #121820);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,43 +19,46 @@ body {
   overflow-x: hidden;
 }
 
+/* Заголовок */
 h1 {
   font-size: 2.5em;
   margin-bottom: 25px;
-  color: #ecf0f1;
-  text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+  color: #00d1ff;
+  text-shadow: 0 0 8px #00d1ff, 0 0 15px #00a8cc;
 }
 
 /* Контейнер лидерборда */
 #leaderboard {
   width: 90%;
-  max-width: 900px;
+  max-width: 1000px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-/* Заголовки */
+/* Заголовки колонок */
 .table-header {
   display: grid;
   grid-template-columns: 1fr 3fr 2fr 2fr;
   padding: 12px 15px;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #2980b9, #3498db);
-  color: #fff;
+  border-radius: 10px;
+  background: linear-gradient(145deg, #0a1926, #0f2a3f);
+  color: #00d1ff;
   font-weight: bold;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 12px rgba(0,212,255,0.5);
+  border: 1px solid rgba(0,212,255,0.3);
 }
 
-/* Карточки игроков */
+/* Карточка игрока */
 .table-row {
   display: grid;
   grid-template-columns: 1fr 3fr 2fr 2fr;
   padding: 12px 15px;
-  border-radius: 12px;
-  background: linear-gradient(145deg, #34495e, #3d566e);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+  border-radius: 10px;
+  background: linear-gradient(145deg, #0f1c2c, #122134);
+  border: 1px solid rgba(0,212,255,0.2);
+  box-shadow: 0 2px 8px rgba(0,212,255,0.2);
   align-items: center;
   transition: transform 0.3s, box-shadow 0.3s, background 0.3s;
   opacity: 0;
@@ -71,21 +74,21 @@ h1 {
 /* Hover эффект */
 .table-row:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-  background: linear-gradient(145deg, #3d566e, #4a6a82);
+  box-shadow: 0 6px 20px rgba(0,212,255,0.6), 0 0 15px rgba(0,212,255,0.3) inset;
+  background: linear-gradient(145deg, #11263c, #163151);
 }
 
 /* Текущий игрок */
 .current {
-  border-left: 5px solid #8e44ad;
+  border-left: 5px solid #00d1ff;
   animation: pulse 1.5s infinite;
 }
 
 /* Pulse анимация */
 @keyframes pulse {
-  0% { box-shadow: 0 0 0px rgba(142,68,173,0.5); }
-  50% { box-shadow: 0 0 15px rgba(142,68,173,0.8); }
-  100% { box-shadow: 0 0 0px rgba(142,68,173,0.5); }
+  0% { box-shadow: 0 0 5px rgba(0,209,255,0.5); }
+  50% { box-shadow: 0 0 20px rgba(0,209,255,0.9); }
+  100% { box-shadow: 0 0 5px rgba(0,209,255,0.5); }
 }
 
 /* Колонки */
@@ -93,12 +96,18 @@ h1 {
   text-align: center;
   font-weight: bold;
   font-size: 1.05em;
+  position: relative;
 }
 
-/* Цвета ролей */
+/* Топ-3 градиенты мест */
+.table-row.top1 { background: linear-gradient(145deg, #ffd700, #e6c200); color:#000; }
+.table-row.top2 { background: linear-gradient(145deg, #c0c0c0, #a6a6a6); color:#000; }
+.table-row.top3 { background: linear-gradient(145deg, #cd7f32, #b36b2e); color:#000; }
+
+/* Цвета ролей с неоновым glow */
 .role-player { color: #ecf0f1; }
-.role-moderator { color: #f39c12; text-shadow: 0 0 3px #f39c12; }
-.role-elder { color: #e74c3c; text-shadow: 0 0 5px #e74c3c; }
+.role-moderator { color: #f39c12; text-shadow: 0 0 6px #f39c12, 0 0 12px #f39c12; }
+.role-elder { color: #e74c3c; text-shadow: 0 0 8px #e74c3c, 0 0 15px #e74c3c; }
 
 /* Адаптив */
 @media screen and (max-width: 700px) {
@@ -173,8 +182,14 @@ onAuthStateChanged(auth, async (user) => {
 
     const row = document.createElement("div");
     row.classList.add("table-row");
-    setTimeout(() => row.classList.add("show"), index * 100); // анимация появления с задержкой
+    setTimeout(() => row.classList.add("show"), index * 100);
+
     if (userData.id === user.uid) row.classList.add("current");
+
+    // Топ-3 места
+    if(prevRank===1) row.classList.add("top1");
+    else if(prevRank===2) row.classList.add("top2");
+    else if(prevRank===3) row.classList.add("top3");
 
     const roleClass = userData.role === "elder" ? "role-elder" : userData.role === "moderator" ? "role-moderator" : "role-player";
 
