@@ -14,7 +14,7 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import { collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 onAuthStateChanged(auth, async user => {
-  if(!user) location.href="login.html";
+  if(!user) location.href="index.html";
 
   const me = (await getDoc(doc(db,"users",user.uid))).data();
   if(me.situation!=="verified") location.href="nick.html";
@@ -35,14 +35,16 @@ onAuthStateChanged(auth, async user => {
 
     const row=document.createElement("div");
     row.className="row";
+
     let roleText="";
     if(u.role==="moderator") roleText="Модер";
     if(u.role==="elder") roleText="Старший модер";
 
     row.innerHTML=`
       <div>${place}</div>
-      <div>${u.nick}</div>
-      <div>${u.points} ${roleText?roleText:""}</div>
+      <div>${u.nick||"(no nick)"}</div>
+      <div>${u.points}</div>
+      <div>${roleText}</div>
     `;
 
     if(d.id===user.uid) row.style.color="#00d8ff";
