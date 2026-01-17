@@ -4,78 +4,80 @@
 <meta charset="UTF-8">
 <title>Главная</title>
 <style>
-body {
-  margin:0; padding:20px;
-  font-family:'Orbitron', sans-serif;
-  background:#0b0c10;
-  color:#00f0ff;
-  display:flex; flex-direction:column; align-items:center;
-}
-h1 { font-size:2.5em; text-shadow:0 0 10px #00f0ff; margin-bottom:20px;}
-.player-card {
-  background:rgba(0,0,0,0.55); border:1px solid rgba(0,255,255,0.2);
-  border-radius:10px; padding:15px 25px; width:300px; text-align:center;
-  box-shadow:0 2px 15px rgba(0,255,255,0.3);
-}
-.button {
-  margin-top:20px; padding:10px 20px;
-  border:none; border-radius:8px; background:#00a0ff; color:#000;
-  font-weight:bold; cursor:pointer; transition:0.3s;
-}
-.button:hover { background:#00f0ff; color:#000; box-shadow:0 0 10px #00f0ff;}
+body{margin:0;padding:20px;font-family:'Orbitron',sans-serif;background:#0b0c10;color:#00f0ff;display:flex;flex-direction:column;align-items:center;}
+h1{font-size:2.5em;text-shadow:0 0 10px #00f0ff;margin-bottom:20px;}
+.card{background:rgba(0,0,0,0.55);padding:25px;border-radius:12px;border:1px solid rgba(0,255,255,0.2);box-shadow:0 2px 15px rgba(0,255,255,0.3);width:400px;text-align:center;}
+.button{padding:10px 20px;border:none;border-radius:8px;background:#00a0ff;color:#000;font-weight:bold;cursor:pointer;transition:0.3s;margin-top:15px;}
+.button:hover{background:#00f0ff;box-shadow:0 0 10px #00f0ff;color:#000;}
 </style>
 </head>
 <body>
 <h1>Главная</h1>
-<div class="player-card" id="playerCard">
-  <div>Ник: <span id="nick">...</span></div>
-  <div>Баллы: <span id="points">0</span></div>
-  <div>Место: <span id="rank">0</span></div>
-</div>
+<div class="card">
+<div id="welcome">Привет, <span id="nick"></span></div>
+<div id="points">Баллы: <span id="playerPoints"></span></div>
+<div id="place">Место: <span id="playerPlace"></span></div>
+<button class="button" id="leaderboardBtn">Лидерборд</button>
 <button class="button" id="checkBtn">Проверить</button>
+<div id="checkResult" style="color:red;margin-top:10px;"></div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, query, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
-const firebaseConfig = { /* твой config */ };
+const firebaseConfig = {
+  apiKey: "AIzaSyB7QbVxGHR7Qm8o8Wzl_wxsCpzMUdS5rws",
+  authDomain: "gdboard-add4a.firebaseapp.com",
+  projectId: "gdboard-add4a",
+  storageBucket: "gdboard-add4a.appspot.com",
+  messagingSenderId: "883125028740",
+  appId: "1:883125028740:web:c504de4139943b8606bfd1"
+};
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
 const nickEl=document.getElementById('nick');
-const pointsEl=document.getElementById('points');
-const rankEl=document.getElementById('rank');
+const pointsEl=document.getElementById('playerPoints');
+const placeEl=document.getElementById('playerPlace');
+const leaderboardBtn=document.getElementById('leaderboardBtn');
 const checkBtn=document.getElementById('checkBtn');
+const checkResult=document.getElementById('checkResult');
 
 onAuthStateChanged(auth, async user=>{
   if(!user) return window.location.href='index.html';
-  const userSnap = await getDoc(doc(db,'users',user.uid));
-  if(!userSnap.exists()) return window.location.href='index.html';
-  const data = userSnap.data();
+  const userRef=doc(db,'users',user.uid);
+  const snap=await getDoc(userRef);
+  if(!snap.exists()) return window.location.href='index.html';
+  const data=snap.data();
   if(data.situation!=='verified') return window.location.href='nick.html';
-  nickEl.textContent = data.nick||'Не указан';
-  pointsEl.textContent = data.points||0;
 
-  // вычисляем место
-  const usersRef = collection(db,'users');
-  const q = query(usersRef, orderBy('points','desc'));
-  const snapshot = await getDocs(q);
-  const usersArray = snapshot.docs.map(d=>({id:d.id,...d.data()}));
-  let rank=1, prevPoints=null, skip=1;
-  for(let u of usersArray){
-    if(u.situation!=='verified' && u.role==='player') continue;
-    if(prevPoints===null || u.points<prevPoints){ rank+=skip-1; skip=1;} else {skip++;}
-    prevPoints=u.points;
-    if(u.id===user.uid){rankEl.textContent=rank; break;}
-  }
+  nickEl.textContent=data.nick || 'Не указан';
+  pointsEl.textContent=data.points || 0;
 
-  // кнопка проверки
+  // место
+  const q=query(collection(db,'users'),where('situation','==','verified'),orderBy('points','desc'));
+  const allSnap=await getDocs(q);
+  let place=1, lastPoints=null, realPlace=1;
+  allSnap.forEach(d=>{
+    const p=d.data().points||0;
+    if(lastPoints!==null && p<lastPoints) realPlace=place;
+    if(d.id===user.uid) realPlace=place;
+    lastPoints=p;
+    place++;
+  });
+  placeEl.textContent=realPlace;
+
+  leaderboardBtn.addEventListener('click',()=>window.location.href='leaderboard.html');
+
   checkBtn.addEventListener('click',()=>{
-    if(data.role==='moderator'||data.role==='elder'){
-      window.location.href=(data.role==='elder')?'elder.html':'moderator.html';
+    if(data.role!=='moderator' && data.role!=='elder'){
+      checkResult.textContent='Ошибка: модерки нет';
     } else {
-      alert('Ошибка: модерки нет');
+      window.location.href=data.role==='elder'?'elder.html':'moderator.html';
     }
   });
 });
