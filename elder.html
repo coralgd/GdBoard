@@ -14,31 +14,52 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/fi
 import { collection, getDocs, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 onAuthStateChanged(auth, async user => {
+  if(!user) location.href="index.html";
   const me = await getDoc(doc(db,"users",user.uid));
-  if (me.data().role !== "elder") location.href="main.html";
+  if(me.data().role!=="elder") location.href="main.html";
 
   const snap = await getDocs(collection(db,"users"));
+
   snap.forEach(d=>{
     const u=d.data();
     const row=document.createElement("div");
     row.className="row";
+
+    // Кнопки динамически меняются
+    let modBtnText = (u.role==="moderator") ? "Снять Модера" : "Сделать Модером";
+    let modBtnClass = (u.role==="moderator") ? "danger" : "";
+    let verBtnText = (u.situation==="verified") ? "Снять Вериф" : "Вериф";
+    let verBtnClass = (u.situation==="verified") ? "danger" : "";
+
     row.innerHTML=`
       <div>#</div>
       <div>${u.nick||"(no nick)"}</div>
-      <div>${u.points||0}</div>
+      <input type="number" value="${u.points||0}">
       <div class="actions">
-        <button class="verify">Вериф</button>
-        <button class="danger unverify">Снять</button>
-        <button class="mod">Модер</button>
-        <button class="danger demod">Снять</button>
+        <button class="pointsBtn">Изменить</button>
+        <button class="${verBtnClass} verBtn">${verBtnText}</button>
+        <button class="${modBtnClass} modBtn">${modBtnText}</button>
       </div>
     `;
-    list.append(row);
+    const pointsInput = row.querySelector("input");
 
-    row.querySelector(".verify").onclick=()=>updateDoc(d.ref,{situation:"verified"});
-    row.querySelector(".unverify").onclick=()=>updateDoc(d.ref,{situation:"not verified"});
-    row.querySelector(".mod").onclick=()=>updateDoc(d.ref,{role:"moderator"});
-    row.querySelector(".demod").onclick=()=>updateDoc(d.ref,{role:"player"});
+    row.querySelector(".pointsBtn").onclick = ()=>updateDoc(d.ref,{points:+pointsInput.value});
+    row.querySelector(".verBtn").onclick = async ()=>{
+      const newStatus = (u.situation==="verified")?"not verified":"verified";
+      await updateDoc(d.ref,{situation:newStatus});
+      row.querySelector(".verBtn").innerText = (newStatus==="verified")?"Снять Вериф":"Вериф";
+      row.querySelector(".verBtn").className = (newStatus==="verified")?"danger verBtn":"verBtn";
+      u.situation=newStatus;
+    };
+    row.querySelector(".modBtn").onclick = async ()=>{
+      const newRole = (u.role==="moderator")?"player":"moderator";
+      await updateDoc(d.ref,{role:newRole});
+      row.querySelector(".modBtn").innerText = (newRole==="moderator")?"Снять Модера":"Сделать Модером";
+      row.querySelector(".modBtn").className = (newRole==="moderator")?"danger modBtn":"modBtn";
+      u.role=newRole;
+    };
+
+    list.append(row);
   });
 });
 </script>
