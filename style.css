@@ -1,0 +1,97 @@
+/* Общие стили */
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Orbitron', monospace;
+  background: #0e0e0e;
+  color: #00ffcc;
+}
+
+h1 {
+  text-align: center;
+  color: #00ffcc;
+  text-shadow: 0 0 10px #00ffcc, 0 0 20px #00ffcc;
+}
+
+/* Кнопки */
+button {
+  background: linear-gradient(90deg, #00ffcc, #0088ff);
+  border: 2px solid #00ffcc;
+  color: #0e0e0e;
+  padding: 8px 16px;
+  margin: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.3s;
+  border-radius: 6px;
+  box-shadow: 0 0 5px #00ffcc;
+}
+
+button:hover {
+  background: linear-gradient(90deg, #0088ff, #00ffcc);
+  box-shadow: 0 0 15px #00ffcc, 0 0 30px #0088ff;
+}
+
+/* Поля ввода */
+input[type="text"], input[type="email"], input[type="password"], input[type="number"] {
+  background: #0e0e0e;
+  border: 2px solid #00ffcc;
+  padding: 8px;
+  color: #00ffcc;
+  font-family: 'Orbitron', monospace;
+  font-size: 16px;
+  border-radius: 4px;
+  outline: none;
+  transition: 0.3s;
+}
+
+input:focus {
+  border-color: #0088ff;
+  box-shadow: 0 0 10px #0088ff;
+}
+
+/* Списки */
+ul, ol {
+  padding: 0;
+  margin: 10px auto;
+  max-width: 500px;
+}
+
+li {
+  list-style: none;
+  padding: 10px;
+  margin: 5px 0;
+  background: #1a1a1a;
+  border-left: 4px solid #00ffcc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: 0.3s;
+}
+
+li:hover {
+  background: #262626;
+  border-left-color: #0088ff;
+}
+
+/* Выделение текущего игрока */
+li.current {
+  color: #ff00ff;
+  font-weight: bold;
+  box-shadow: 0 0 10px #ff00ff;
+}
+
+/* Панель контента */
+form, #usersList, #leaderboardList {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Адаптивность */
+@media screen and (max-width: 600px) {
+  button, input[type="number"] {
+    width: 80%;
+    margin: 5px auto;
+    display: block;
+  }
+}
