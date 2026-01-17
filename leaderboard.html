@@ -5,7 +5,6 @@
 </head>
 <body>
 <canvas id="hud-bg"></canvas>
-
 <div class="panel" id="list"></div>
 
 <script type="module">
@@ -15,7 +14,6 @@ import { collection, query, orderBy, getDocs, doc, getDoc } from "https://www.gs
 
 onAuthStateChanged(auth, async user => {
   if(!user) location.href="index.html";
-
   const me = (await getDoc(doc(db,"users",user.uid))).data();
   if(me.situation!=="verified") location.href="nick.html";
 
